@@ -1,12 +1,14 @@
 package zm.ac.mulungushi.registrar;
 
+import zm.ac.mulungushi.registrar.util.StudentValidator;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
-import zm.ac.mulungushi.registrar.StudentValidator.NameResult;
-import zm.ac.mulungushi.registrar.StudentValidator.NumberResult;
+import zm.ac.mulungushi.registrar.util.StudentValidator.NameResult;
+import zm.ac.mulungushi.registrar.util.StudentValidator.NumberResult;
 
 public class StudentValidatorTest {
 

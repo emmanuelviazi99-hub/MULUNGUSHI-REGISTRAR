@@ -8,6 +8,7 @@
     <uses-permission android:name="android.permission.VIBRATE" />
 
     <application
+        android:name=".RegistrarApp"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -21,7 +22,7 @@
 
         <!-- Launcher: the bold splash, then sign in -->
         <activity
-            android:name=".SplashActivity"
+            android:name="zm.ac.mulungushi.registrar.ui.auth.SplashActivity"
             android:exported="true"
             android:theme="@style/Theme.Registrar.Splash"
             android:screenOrientation="portrait">
@@ -32,19 +33,19 @@
         </activity>
 
         <activity
-            android:name=".LoginActivity"
+            android:name="zm.ac.mulungushi.registrar.ui.auth.LoginActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
-        <activity android:name=".StudentHomeActivity" android:exported="false" />
-        <activity android:name=".LecturerRosterActivity" android:exported="false" />
-        <activity android:name=".ForgotPasswordActivity" android:exported="false" />
-        <activity android:name=".RegisterActivity" android:exported="false" />
-        <activity android:name=".MyGroupActivity" android:exported="false" />
-        <activity android:name=".GroupChangeActivity" android:exported="false" />
-        <activity android:name=".EditDetailsActivity" android:exported="false" />
-        <activity android:name=".SyncActivity" android:exported="false" />
-        <activity android:name=".LecturerDashboardActivity" android:exported="false" />
-        <activity android:name=".RequestsActivity" android:exported="false" />
+        <activity android:name="zm.ac.mulungushi.registrar.ui.student.StudentHomeActivity" android:exported="false" />
+        <activity android:name="zm.ac.mulungushi.registrar.ui.lecturer.LecturerRosterActivity" android:exported="false" />
+        <activity android:name="zm.ac.mulungushi.registrar.ui.auth.ForgotPasswordActivity" android:exported="false" />
+        <activity android:name="zm.ac.mulungushi.registrar.ui.auth.RegisterActivity" android:exported="false" />
+        <activity android:name="zm.ac.mulungushi.registrar.ui.student.MyGroupActivity" android:exported="false" />
+        <activity android:name="zm.ac.mulungushi.registrar.ui.student.GroupChangeActivity" android:exported="false" />
+        <activity android:name="zm.ac.mulungushi.registrar.ui.student.EditDetailsActivity" android:exported="false" />
+        <activity android:name="zm.ac.mulungushi.registrar.ui.sync.SyncActivity" android:exported="false" />
+        <activity android:name="zm.ac.mulungushi.registrar.ui.lecturer.LecturerDashboardActivity" android:exported="false" />
+        <activity android:name="zm.ac.mulungushi.registrar.ui.lecturer.RequestsActivity" android:exported="false" />
     </application>
 
 </manifest>

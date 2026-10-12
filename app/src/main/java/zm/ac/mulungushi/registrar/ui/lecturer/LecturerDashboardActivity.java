@@ -1,0 +1,149 @@
+package zm.ac.mulungushi.registrar.ui.lecturer;
+
+import zm.ac.mulungushi.registrar.ui.common.BottomNav;
+import zm.ac.mulungushi.registrar.ui.common.ConnectivityBanner;
+import zm.ac.mulungushi.registrar.ui.common.Feedback;
+import zm.ac.mulungushi.registrar.ui.auth.LoginActivity;
+import zm.ac.mulungushi.registrar.data.model.Rules;
+import zm.ac.mulungushi.registrar.ui.common.SignOutSheet;
+import zm.ac.mulungushi.registrar.data.repository.StudentRepository;
+import zm.ac.mulungushi.registrar.ui.sync.SyncActivity;
+import zm.ac.mulungushi.registrar.R;
+import android.content.Intent;
+import android.os.Bundle;
+import android.view.Gravity;
+import android.view.View;
+import android.widget.LinearLayout;
+import android.widget.TextView;
+
+import androidx.appcompat.app.AppCompatActivity;
+
+/**
+ * Ported from LecturerDashboard. The lecturer's Home tab: real counts from
+ * StudentRepository, a group-occupancy bar per group, and quick actions
+ * leading to Requests, Sync, the roster, or straight into Add student.
+ *
+ * "Conflicts" is always 0 here — conflict detection depends on the offline
+ * sync queue the brief describes in Activity E, which isn't built yet.
+ */
+public class LecturerDashboardActivity extends AppCompatActivity implements EditStudentSheet.Listener {
+
+    private static final String LECTURER_NAME = "B. Nyirenda";
+    private static final String LECTURER_SHORT = "B. Nyirenda";
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_lecturer_dashboard);
+        ConnectivityBanner.attach(this);
+
+        RosterFormat.bindHomeAvatar(this, LECTURER_NAME, SignOutSheet.lecturerDetail(this));
+
+        findViewById(R.id.actionRequests).setOnClickListener(v ->
+                startActivity(new Intent(this, RequestsActivity.class)));
+        findViewById(R.id.actionSync).setOnClickListener(v ->
+                startActivity(new Intent(this, SyncActivity.class).putExtra(SyncActivity.EXTRA_ROLE, SyncActivity.ROLE_LECTURER)));
+        findViewById(R.id.actionAddStudent).setOnClickListener(v ->
+                EditStudentSheet.forAdd().show(getSupportFragmentManager(), this));
+
+        BottomNav.bindLecturer(this, BottomNav.HOME);
+
+        render();
+        RosterFormat.stagger(this);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        render();
+    }
+
+    @Override
+    public void onSaved(String toastMessage) {
+        Feedback.show(this, toastMessage);
+        render();
+    }
+
+    private void render() {
+        ((TextView) findViewById(R.id.textWelcome)).setText(
+                getString(R.string.welcome_lecturer_fmt, LECTURER_SHORT));
+
+        StudentRepository repo = StudentRepository.getInstance();
+        int activeCount = repo.getActive().size();
+        int groupsFull = 0;
+        for (String g : Rules.GROUPS) if (repo.groupCount(g) >= Rules.CAPACITY) groupsFull++;
+        int requestCount = repo.pendingRequestCount();
+        int conflictCount = repo.conflictCount();
+
+        ((TextView) findViewById(R.id.tileStudentsNum)).setText(String.valueOf(activeCount));
+        ((TextView) findViewById(R.id.tileGroupsFullNum)).setText(String.valueOf(groupsFull));
+        ((TextView) findViewById(R.id.tileRequestsNum)).setText(String.valueOf(requestCount));
+        ((TextView) findViewById(R.id.tileConflictsNum)).setText(String.valueOf(conflictCount));
+
+        ((TextView) findViewById(R.id.actionRequestsSub)).setText(requestCount > 0
+                ? getString(R.string.action_requests_waiting_fmt, requestCount)
+                : getString(R.string.action_requests_sub_none));
+        ((TextView) findViewById(R.id.actionSyncSub)).setText(getResources().getQuantityString(R.plurals.conflicts_to_review, conflictCount, conflictCount));
+
+        LinearLayout occupancy = findViewById(R.id.occupancyList);
+        occupancy.removeAllViews();
+        for (String g : Rules.GROUPS) {
+            occupancy.addView(occupancyRow(g, repo.groupCount(g)));
+        }
+    }
+
+    private View occupancyRow(String group, int count) {
+        LinearLayout row = new LinearLayout(this);
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        row.setGravity(Gravity.CENTER_VERTICAL);
+        int vPad = dp(6);
+        row.setPadding(0, vPad, 0, vPad);
+
+        TextView label = new TextView(this);
+        label.setText(group);
+        label.setTypeface(label.getTypeface(), android.graphics.Typeface.BOLD);
+        label.setTextColor(getResources().getColor(R.color.navy_900));
+        label.setTextSize(13f);
+        label.setLayoutParams(new LinearLayout.LayoutParams(dp(32), LinearLayout.LayoutParams.WRAP_CONTENT));
+        row.addView(label);
+
+        LinearLayout track = new LinearLayout(this);
+        track.setOrientation(LinearLayout.HORIZONTAL);
+        track.setBackgroundResource(R.drawable.bg_track);
+        LinearLayout.LayoutParams trackLp = new LinearLayout.LayoutParams(0, dp(6), 1f);
+        trackLp.setMarginStart(dp(12));
+        trackLp.setMarginEnd(dp(12));
+        track.setLayoutParams(trackLp);
+
+        boolean full = count >= Rules.CAPACITY;
+        View fill = new View(this);
+        fill.setBackgroundResource(full ? R.drawable.bg_fill_red : R.drawable.bg_fill_navy);
+        float frac = Math.min(1f, count / (float) Rules.CAPACITY);
+        track.addView(fill, new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, frac == 0 ? 0.0001f : frac));
+        RosterFormat.growBar(fill);
+        View empty = new View(this);
+        track.addView(empty, new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 1f - frac == 0 ? 0.0001f : 1f - frac));
+        row.addView(track);
+
+        TextView countView = new TextView(this);
+        countView.setText(count + "/" + Rules.CAPACITY);
+        countView.setTextColor(getResources().getColor(R.color.slate_500));
+        countView.setTextSize(11.5f);
+        countView.setLayoutParams(new LinearLayout.LayoutParams(dp(48), LinearLayout.LayoutParams.WRAP_CONTENT));
+        countView.setGravity(Gravity.END);
+        row.addView(countView);
+
+        return row;
+    }
+
+    private int dp(int value) {
+        return (int) (value * getResources().getDisplayMetrics().density);
+    }
+
+    private void signOut() {
+        Intent intent = new Intent(this, LoginActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+        finish();
+    }
+}
